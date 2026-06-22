@@ -15,11 +15,9 @@ class ApiClient {
     const { body, params, token } = options
     let url = `${this.baseUrl}${path}`
 
-    // 使用 Vite proxy 时，开发环境直接用相对路径
-    // 生产环境使用完整 URL
-    if (import.meta.env.DEV) {
-      url = path
-    }
+    // 开发环境 Vite proxy 转发，生产环境 Nginx 代理转发
+    // 统一使用相对路径，避免跨域和 localhost 硬编码问题
+    url = path
 
     if (params) {
       const qs = new URLSearchParams()

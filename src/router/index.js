@@ -98,6 +98,12 @@ const routes = [
     meta: { title: '我的优惠券' }
   },
       {
+        path: '/favorites',
+        name: 'MyFavorites',
+        component: () => import('../views/user/MyFavorites.vue'),
+        meta: { title: '我的收藏' }
+      },
+      {
         path: '/after-sales',
         name: 'MyAfterSales',
         component: () => import('../views/user/MyAfterSales.vue'),

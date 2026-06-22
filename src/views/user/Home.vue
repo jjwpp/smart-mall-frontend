@@ -93,6 +93,35 @@
       </div>
     </div>
 
+    <!-- ========== 热销商品 ========== -->
+    <div class="hot-section" v-if="hotProducts.length">
+      <div class="hot-header">
+        <div class="hot-title-row">
+          <span class="hot-icon">🔥</span>
+          <h2 class="hot-title">热销爆款</h2>
+          <span class="hot-badge">TOP {{ hotProducts.length }}</span>
+        </div>
+      </div>
+      <div class="hot-scroll">
+        <div
+          class="hot-card"
+          v-for="p in hotProducts"
+          :key="p.id"
+          @click="$router.push(`/products/${p.id}`)"
+        >
+          <div class="hot-card-img">
+            <img v-if="p.coverUrl" :src="p.coverUrl" :alt="p.name" loading="lazy" />
+            <span v-else>📦</span>
+            <div class="hot-rank-badge" v-if="p.sales">已售{{ p.sales }}</div>
+          </div>
+          <div class="hot-card-info">
+            <div class="hot-card-name">{{ p.name }}</div>
+            <div class="hot-card-price">¥{{ p.price }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ========== 商品区域标题 ========== -->
     <div class="section-header">
       <div class="header-left">
@@ -275,12 +304,17 @@ function focusSearch() {
 
 // ======== 商品数据 ========
 const products = ref([])
+const hotProducts = ref([])
 const categories = ref([])
 const selectedCategory = ref(null)
 const pageNum = ref(1)
 const pageSize = ref(12)
 const totalPages = ref(0)
 const loading = ref(false)
+
+async function fetchHotProducts() {
+  try { hotProducts.value = await api.getHotProducts() || [] } catch { /* ignore */ }
+}
 
 async function fetchCategories() {
   try {
@@ -365,6 +399,7 @@ function formatPrice(price) {
 }
 
 onMounted(() => {
+  fetchHotProducts()
   fetchCategories()
   fetchProducts()
 })
@@ -698,6 +733,102 @@ onMounted(() => {
 .pill-emoji {
   font-size: 16px;
   line-height: 1;
+}
+
+/* ==================== 热销爆款 ==================== */
+.hot-section {
+  margin-bottom: 28px;
+}
+.hot-header {
+  margin-bottom: 14px;
+}
+.hot-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hot-icon { font-size: 22px; }
+.hot-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+}
+.hot-badge {
+  font-size: 12px;
+  background: linear-gradient(135deg, #ff2442, #ff7a45);
+  color: #fff;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+.hot-scroll {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 4px;
+}
+.hot-scroll::-webkit-scrollbar { display: none; }
+.hot-card {
+  flex-shrink: 0;
+  width: 150px;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  cursor: pointer;
+  transition: transform .2s, box-shadow .2s;
+}
+.hot-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0,0,0,.1);
+}
+.hot-card-img {
+  width: 150px;
+  height: 150px;
+  background: #f9f9f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.hot-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.hot-card-img span {
+  font-size: 36px;
+}
+.hot-rank-badge {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  background: rgba(0,0,0,.55);
+  color: #fff;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.hot-card-info {
+  padding: 10px 12px 12px;
+}
+.hot-card-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 4px;
+}
+.hot-card-price {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ff2442;
 }
 
 /* ==================== 区域标题 ==================== */

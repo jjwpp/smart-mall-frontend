@@ -5,9 +5,12 @@
     <div class="profile-header">
       <div class="header-bg"></div>
       <div class="header-content">
-        <div class="avatar-circle">
-          <span class="avatar-text">{{ (user?.nickname || user?.username || 'U')[0].toUpperCase() }}</span>
+        <div class="avatar-circle" @click="triggerUpload">
+          <img v-if="avatarUrl" :src="avatarUrl" class="avatar-img" />
+          <span v-else class="avatar-text">{{ (user?.nickname || user?.username || 'U')[0].toUpperCase() }}</span>
+          <div class="avatar-upload-hint"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
         </div>
+        <input type="file" ref="fileInput" accept="image/*" hidden @change="handleUpload" />
         <h2 class="user-name">{{ user?.nickname || user?.username || '用户' }}</h2>
         <div class="member-badge">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
@@ -58,6 +61,13 @@
         <span class="menu-extra">查看全部</span>
         <svg class="menu-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
+      <div class="menu-item" @click="navigateTo('/favorites')">
+        <div class="menu-icon favorites">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </div>
+        <span class="menu-label">我的收藏</span>
+        <svg class="menu-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
       <div class="menu-item" @click="navigateTo('/addresses')">
         <div class="menu-icon addresses">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -65,7 +75,7 @@
         <span class="menu-label">收货地址</span>
         <svg class="menu-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
-      <div class="menu-item" @click="navigateTo('/my-reviews')">
+      <div class="menu-item" @click="navigateTo('/reviews')">
         <div class="menu-icon reviews">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
         </div>
@@ -128,6 +138,33 @@ const router = useRouter()
 const userStore = useUserStore()
 const user = ref(userStore.currentUser)
 const showEdit = ref(false)
+const fileInput = ref(null)
+const avatarUrl = ref(user.value?.avatar || '')
+
+function triggerUpload() { fileInput.value?.click() }
+
+async function fetchProfile() {
+  try {
+    const u = await api.getUserProfile(userStore.userId, userStore.token)
+    if (u) {
+      user.value = u
+      avatarUrl.value = u.avatar || ''
+      userStore.currentUser = { ...userStore.currentUser, ...u }
+    }
+  } catch { /* ignore */ }
+}
+
+async function handleUpload(e) {
+  const file = e.target.files[0]
+  if (!file) return
+  try {
+    const url = await api.uploadFile(file, userStore.token)
+    await api.updateAvatar(userStore.userId, url, userStore.token)
+    avatarUrl.value = url
+    user.value = { ...user.value, avatar: url }
+    userStore.currentUser = { ...userStore.currentUser, avatar: url }
+  } catch (err) { alert('上传失败: ' + err.message) }
+}
 
 // 各状态订单数量
 const orderCounts = reactive({
@@ -156,7 +193,7 @@ async function fetchOrderCounts() {
   } catch { /* ignore */ }
 }
 
-onMounted(fetchOrderCounts)
+onMounted(() => { fetchProfile(); fetchOrderCounts() })
 
 const editForm = reactive({
   nickname: user.value?.nickname || '',
@@ -247,10 +284,38 @@ function navigateTo(path) {
   justify-content: center;
   margin-bottom: 14px;
   transition: transform 0.3s;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
 }
 
 .avatar-circle:hover {
   transform: scale(1.05);
+}
+
+.avatar-circle:hover .avatar-upload-hint {
+  opacity: 1;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-upload-hint {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,.45);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 0;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
 .avatar-text {
@@ -397,6 +462,11 @@ function navigateTo(path) {
 .menu-icon.orders {
   background: rgba(255, 36, 66, 0.08);
   color: #ff2442;
+}
+
+.menu-icon.favorites {
+  background: rgba(233, 30, 99, 0.08);
+  color: #e91e63;
 }
 
 .menu-icon.addresses {

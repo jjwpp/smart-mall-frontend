@@ -16,6 +16,10 @@ export default defineConfig({
         target: 'http://localhost:8201',
         changeOrigin: true
       },
+      '/admin/dashboard': {
+        target: 'http://localhost:8201',
+        changeOrigin: true
+      },
       '/admin/login': {
         target: 'http://localhost:8201',
         changeOrigin: true
@@ -99,6 +103,14 @@ export default defineConfig({
         changeOrigin: true
       },
       '/user/after-sales': {
+        target: 'http://localhost:8202',
+        changeOrigin: true
+      },
+      '/user/favorites': {
+        target: 'http://localhost:8202',
+        changeOrigin: true
+      },
+      '/user/profile': {
         target: 'http://localhost:8202',
         changeOrigin: true
       },

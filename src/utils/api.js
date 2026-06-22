@@ -84,6 +84,7 @@ export const api = {
 
   // ---- 用户端：商品 ----
   getProducts: (params) => productApi.get('/user/products', params),
+  getHotProducts: () => productApi.get('/user/products/hot'),
   getProductDetail: (id) => productApi.get(`/user/products/${id}`),
   getProductSkus: (id) => productApi.get(`/user/products/${id}/skus`),
   getCategories: () => productApi.get('/user/products/categories'),
@@ -134,6 +135,9 @@ export const api = {
   getProductReviews: (productId) => productApi.get(`/user/reviews/product/${productId}`),
   createReview: (data, token) => productApi.post('/user/reviews', data, token),
   getMyReviews: (userId, token) => productApi.get('/user/reviews/mine', { userId }, token),
+
+  // ---- 管理端：看板 ----
+  getDashboardStats: (token) => systemApi.get('/admin/dashboard/stats', null, token),
 
   // ---- 管理端：用户 ----
   getAdminUsers: (params, token) => systemApi.get('/admin/users', params, token),
@@ -202,6 +206,15 @@ export const api = {
   createCoupon: (data, token) => systemApi.post('/admin/coupons', data, token),
   updateCoupon: (id, data, token) => systemApi.put(`/admin/coupons/${id}`, data, token),
   deleteCoupon: (id, token) => systemApi.delete(`/admin/coupons/${id}`, null, token),
+
+  // ---- 用户端：个人资料 ----
+  getUserProfile: (userId, token) => productApi.request('GET', `/user/profile/${userId}`, { token }),
+  updateAvatar: (userId, avatar, token) => productApi.request('PUT', '/user/profile/avatar', { body: { userId, avatar }, token }),
+
+  // ---- 用户端：收藏 ----
+  toggleFavorite: (productId, userId, token) => tradeApi.request('POST', `/user/favorites/toggle/${productId}`, { params: { userId }, token }),
+  checkFavorite: (productId, userId) => tradeApi.get(`/user/favorites/check/${productId}`, { userId }),
+  getMyFavorites: (userId, token) => tradeApi.get('/user/favorites', { userId }, token),
 
   // ---- 用户端：售后 ----
   getMyAfterSales: (params, token) => tradeApi.get('/user/after-sales', params, token),
